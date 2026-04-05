@@ -1,5 +1,17 @@
 <?php
 
+use App\Livewire\AccountingRules\Categories;
+use App\Livewire\BalanceSheetReport;
+use App\Livewire\DiaryManager;
+use App\Livewire\Inventory\Dashboard;
+use App\Livewire\Inventory\Movements;
+use App\Livewire\Inventory\Products;
+use App\Livewire\LedgerReport;
+use App\Livewire\MainDashboard;
+use App\Livewire\Nomenclatures\Index;
+use App\Livewire\ResultsReport;
+use App\Livewire\Settings\Roles;
+use App\Livewire\Settings\Users;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
@@ -8,32 +20,32 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-
 Route::middleware(['auth'])->group(function () {
     Route::get('index', function () {
         return view('index');
     })->name('index');
 
-    Route::get('dashboard', App\Livewire\MainDashboard::class)
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+    Route::get('dashboard', MainDashboard::class)
+        ->middleware(['auth', 'verified'])
+        ->name('dashboard');
 });
 
 // Inventory Module - Protected by 'ver inventario'
 Route::middleware(['auth', 'verified', 'can:ver inventario'])->group(function () {
-    Route::get('inventory', App\Livewire\Inventory\Dashboard::class)->name('inventory.dashboard');
-    Route::get('inventory/products', App\Livewire\Inventory\Products::class)->name('inventory.products');
-    Route::get('inventory/movements', App\Livewire\Inventory\Movements::class)->name('inventory.movements');
+    Route::get('inventory', Dashboard::class)->name('inventory.dashboard');
+    Route::get('inventory/products', Products::class)->name('inventory.products');
+    Route::get('inventory/movements', Movements::class)->name('inventory.movements');
 });
 
 // Accounting Module - Protected by 'ver contabilidad'
 Route::middleware(['auth', 'verified', 'can:ver contabilidad'])->group(function () {
-    Route::get('nomenclatures', App\Livewire\Nomenclatures\Index::class)->name('nomenclatures.index');
+    Route::get('nomenclatures', Index::class)->name('nomenclatures.index');
     Route::get('accounting-rules', App\Livewire\AccountingRules\Index::class)->name('accounting-rules.index');
-    Route::get('diary', App\Livewire\DiaryManager::class)->name('diary.index');
-    Route::get('ledger', App\Livewire\LedgerReport::class)->name('ledger.index');
-    Route::get('results', App\Livewire\ResultsReport::class)->name('results.index');
-    Route::get('balance', App\Livewire\BalanceSheetReport::class)->name('balance.index');
+    Route::get('accounting-rule-categories', Categories::class)->name('accounting-rule-categories.index');
+    Route::get('diary', DiaryManager::class)->name('diary.index');
+    Route::get('ledger', LedgerReport::class)->name('ledger.index');
+    Route::get('results', ResultsReport::class)->name('results.index');
+    Route::get('balance', BalanceSheetReport::class)->name('balance.index');
 });
 
 Route::middleware(['auth'])->group(function () {
@@ -54,11 +66,11 @@ Route::middleware(['auth'])->group(function () {
         )
         ->name('two-factor.show');
 
-    Route::get('settings/users', App\Livewire\Settings\Users::class)
+    Route::get('settings/users', Users::class)
         ->middleware(['can:gestionar usuarios'])
         ->name('users.index');
 
-    Route::get('settings/roles', App\Livewire\Settings\Roles::class)
+    Route::get('settings/roles', Roles::class)
         ->middleware(['role:admin']) // Only admins should create roles ideally, or 'manage users'
         ->name('roles.index');
 });

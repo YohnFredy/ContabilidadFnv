@@ -9,6 +9,7 @@ class AccountingRule extends Model
 {
     protected $fillable = [
         'name',
+        'accounting_rule_category_id',
         'nomenclature_id_1',
         'nature_1',
         'nomenclature_id_2',
@@ -24,6 +25,11 @@ class AccountingRule extends Model
     ];
 
     public const NATURES = ['Débito', 'Crédito'];
+
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(AccountingRuleCategory::class, 'accounting_rule_category_id');
+    }
 
     public function nomenclature1(): BelongsTo
     {

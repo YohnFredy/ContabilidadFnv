@@ -17,6 +17,8 @@ return new class extends Migration {
             $table->decimal('debit', 20, 2)->default(0);
             $table->decimal('credit', 20, 2)->default(0);
             $table->string('invoice_number')->nullable();
+             $table->string('nit_cc')->nullable();
+            $table->string('business_name')->nullable();
             $table->text('description')->nullable();
             $table->foreignId('parent_id')->nullable()->constrained('diaries')->onDelete('cascade');
             $table->timestamps();

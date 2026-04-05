@@ -3,8 +3,8 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <h1 class="text-xl sm:text-2xl font-semibold text-slate-900 dark:text-white">Reglas Contables</h1>
             @can('crear reglas contables')
-                <flux:button wire:click="create" icon="plus" variant="primary" class="w-full sm:w-auto">Nueva Regla
-                </flux:button>
+            <flux:button wire:click="create" icon="plus" variant="primary" class="w-full sm:w-auto">Nueva Regla
+            </flux:button>
             @endcan
         </div>
 
@@ -22,6 +22,9 @@
                             <th scope="col"
                                 class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider dark:text-zinc-400">
                                 Nombre</th>
+                            <th scope="col"
+                                class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider dark:text-zinc-400">
+                                Categoría</th>
                             <th scope="col"
                                 class="px-3 sm:px-4 py-3 text-left text-xs font-medium text-slate-500 uppercase tracking-wider dark:text-zinc-400">
                                 Cuenta 1</th>
@@ -47,98 +50,109 @@
                     </thead>
                     <tbody class="bg-white divide-y divide-slate-200 dark:bg-zinc-900 dark:divide-zinc-700">
                         @foreach ($rules as $rule)
-                            <tr wire:key="{{ $rule->id }}">
-                                <td
-                                    class="px-3 sm:px-4 py-3 whitespace-nowrap text-sm font-medium text-slate-900 dark:text-white">
-                                    {{ $rule->name }}</td>
-                                <td
-                                    class="px-3 sm:px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-zinc-400">
-                                    @if ($rule->nomenclature1)
-                                        <div class="flex flex-col">
-                                            <span class="font-mono text-xs">{{ $rule->nomenclature1->code }}</span>
-                                            <flux:badge size="sm"
-                                                color="{{ $rule->nature_1 == 'Débito' ? 'blue' : 'green' }}">
-                                                {{ $rule->nature_1 }}</flux:badge>
-                                        </div>
-                                    @else
-                                        <span class="text-slate-400 dark:text-zinc-500">-</span>
-                                    @endif
-                                </td>
-                                <td
-                                    class="px-3 sm:px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-zinc-400 hidden md:table-cell">
-                                    @if ($rule->nomenclature2)
-                                        <div class="flex flex-col">
-                                            <span class="font-mono text-xs">{{ $rule->nomenclature2->code }}</span>
-                                            <flux:badge size="sm"
-                                                color="{{ $rule->nature_2 == 'Débito' ? 'blue' : 'green' }}">
-                                                {{ $rule->nature_2 }}</flux:badge>
-                                        </div>
-                                    @else
-                                        <span class="text-slate-400 dark:text-zinc-500">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
-                                    @if ($rule->nomenclature3)
-                                        <div class="flex flex-col">
-                                            <span class="font-mono text-xs">{{ $rule->nomenclature3->code }}</span>
-                                            <flux:badge size="sm"
-                                                color="{{ $rule->nature_3 == 'Débito' ? 'blue' : 'green' }}">
-                                                {{ $rule->nature_3 }}</flux:badge>
-                                        </div>
-                                    @else
-                                        <span class="text-zinc-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
-                                    @if ($rule->nomenclature4)
-                                        <div class="flex flex-col">
-                                            <span class="font-mono text-xs">{{ $rule->nomenclature4->code }}</span>
-                                            <flux:badge size="sm"
-                                                color="{{ $rule->nature_4 == 'Débito' ? 'blue' : 'green' }}">
-                                                {{ $rule->nature_4 }}</flux:badge>
-                                        </div>
-                                    @else
-                                        <span class="text-zinc-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
-                                    @if ($rule->nomenclature5)
-                                        <div class="flex flex-col">
-                                            <span class="font-mono text-xs">{{ $rule->nomenclature5->code }}</span>
-                                            <flux:badge size="sm"
-                                                color="{{ $rule->nature_5 == 'Débito' ? 'blue' : 'green' }}">
-                                                {{ $rule->nature_5 }}</flux:badge>
-                                        </div>
-                                    @else
-                                        <span class="text-zinc-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
-                                    @if ($rule->nomenclature6)
-                                        <div class="flex flex-col">
-                                            <span class="font-mono text-xs">{{ $rule->nomenclature6->code }}</span>
-                                            <flux:badge size="sm"
-                                                color="{{ $rule->nature_6 == 'Débito' ? 'blue' : 'green' }}">
-                                                {{ $rule->nature_6 }}</flux:badge>
-                                        </div>
-                                    @else
-                                        <span class="text-zinc-400">-</span>
-                                    @endif
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
-                                    <div class="flex gap-2">
-                                        @can('editar reglas contables')
-                                            <flux:button wire:click="edit({{ $rule->id }})" icon="pencil-square"
-                                                size="sm" variant="ghost" />
-                                        @endcan
-                                        @can('eliminar reglas contables')
-                                            <flux:button wire:click="delete({{ $rule->id }})"
-                                                wire:confirm="¿Estás seguro de eliminar esta regla?" icon="trash"
-                                                size="sm" variant="danger" />
-                                        @endcan
-                                    </div>
-                                </td>
-                            </tr>
+                        <tr wire:key="{{ $rule->id }}">
+                            <td
+                                class="px-3 sm:px-4 py-3  text-sm font-medium text-slate-900 dark:text-white">
+                                {{ $rule->name }}
+                            </td>
+                            <td
+                                class="px-3 sm:px-4 py-3text-sm text-slate-600 dark:text-zinc-400">
+                                {{ $rule->category?->name ?? '-' }}
+                            </td>
+                            <td
+                                class="px-3 sm:px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-zinc-400">
+                                @if ($rule->nomenclature1)
+                                <div class="flex flex-col">
+                                    <span class="font-mono text-xs">{{ $rule->nomenclature1->code }}</span>
+                                    <flux:badge size="sm"
+                                        color="{{ $rule->nature_1 == 'Débito' ? 'blue' : 'green' }}">
+                                        {{ $rule->nature_1 }}
+                                    </flux:badge>
+                                </div>
+                                @else
+                                <span class="text-slate-400 dark:text-zinc-500">-</span>
+                                @endif
+                            </td>
+                            <td
+                                class="px-3 sm:px-4 py-3 whitespace-nowrap text-sm text-slate-600 dark:text-zinc-400 hidden md:table-cell">
+                                @if ($rule->nomenclature2)
+                                <div class="flex flex-col">
+                                    <span class="font-mono text-xs">{{ $rule->nomenclature2->code }}</span>
+                                    <flux:badge size="sm"
+                                        color="{{ $rule->nature_2 == 'Débito' ? 'blue' : 'green' }}">
+                                        {{ $rule->nature_2 }}
+                                    </flux:badge>
+                                </div>
+                                @else
+                                <span class="text-slate-400 dark:text-zinc-500">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
+                                @if ($rule->nomenclature3)
+                                <div class="flex flex-col">
+                                    <span class="font-mono text-xs">{{ $rule->nomenclature3->code }}</span>
+                                    <flux:badge size="sm"
+                                        color="{{ $rule->nature_3 == 'Débito' ? 'blue' : 'green' }}">
+                                        {{ $rule->nature_3 }}
+                                    </flux:badge>
+                                </div>
+                                @else
+                                <span class="text-zinc-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
+                                @if ($rule->nomenclature4)
+                                <div class="flex flex-col">
+                                    <span class="font-mono text-xs">{{ $rule->nomenclature4->code }}</span>
+                                    <flux:badge size="sm"
+                                        color="{{ $rule->nature_4 == 'Débito' ? 'blue' : 'green' }}">
+                                        {{ $rule->nature_4 }}
+                                    </flux:badge>
+                                </div>
+                                @else
+                                <span class="text-zinc-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
+                                @if ($rule->nomenclature5)
+                                <div class="flex flex-col">
+                                    <span class="font-mono text-xs">{{ $rule->nomenclature5->code }}</span>
+                                    <flux:badge size="sm"
+                                        color="{{ $rule->nature_5 == 'Débito' ? 'blue' : 'green' }}">
+                                        {{ $rule->nature_5 }}
+                                    </flux:badge>
+                                </div>
+                                @else
+                                <span class="text-zinc-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm text-zinc-500 dark:text-zinc-400">
+                                @if ($rule->nomenclature6)
+                                <div class="flex flex-col">
+                                    <span class="font-mono text-xs">{{ $rule->nomenclature6->code }}</span>
+                                    <flux:badge size="sm"
+                                        color="{{ $rule->nature_6 == 'Débito' ? 'blue' : 'green' }}">
+                                        {{ $rule->nature_6 }}
+                                    </flux:badge>
+                                </div>
+                                @else
+                                <span class="text-zinc-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium">
+                                <div class="flex gap-2">
+                                    @can('editar reglas contables')
+                                    <flux:button wire:click="edit({{ $rule->id }})" icon="pencil-square"
+                                        size="sm" variant="ghost" />
+                                    @endcan
+                                    @can('eliminar reglas contables')
+                                    <flux:button wire:click="delete({{ $rule->id }})"
+                                        wire:confirm="¿Estás seguro de eliminar esta regla?" icon="trash"
+                                        size="sm" variant="danger" />
+                                    @endcan
+                                </div>
+                            </td>
+                        </tr>
                         @endforeach
                     </tbody>
                 </table>
@@ -161,7 +175,17 @@
                 <div class="space-y-4">
                     <flux:input wire:model="name" label="Nombre de la Regla" placeholder="Ej. Compras con IVA" />
                     @error('name')
-                        <span class="text-red-500 text-sm">{{ $message }}</span>
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
+                    @enderror
+
+                    <flux:select wire:model="accounting_rule_category_id" label="Categoría" placeholder="Seleccione una categoría (opcional)...">
+                        <flux:select.option value="">Ninguna</flux:select.option>
+                        @foreach ($categories as $cat)
+                        <flux:select.option value="{{ $cat->id }}">{{ $cat->name }}</flux:select.option>
+                        @endforeach
+                    </flux:select>
+                    @error('accounting_rule_category_id')
+                    <span class="text-red-500 text-sm">{{ $message }}</span>
                     @enderror
 
                     <!-- Cuenta 1 (Principal) -->
@@ -173,9 +197,9 @@
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     <option value="">Seleccionar Cuenta...</option>
                                     @foreach ($nomenclatures as $nom)
-                                        <option value="{{ $nom->id }}">{{ $nom->code }} -
-                                            {{ $nom->name }}
-                                        </option>
+                                    <option value="{{ $nom->id }}">{{ $nom->code }} -
+                                        {{ $nom->name }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -183,7 +207,7 @@
                                 <select wire:model="nature_1"
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     @foreach ($natures as $nat)
-                                        <option value="{{ $nat }}">{{ $nat }}</option>
+                                    <option value="{{ $nat }}">{{ $nat }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -199,8 +223,9 @@
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     <option value="">Seleccionar Cuenta...</option>
                                     @foreach ($nomenclatures as $nom)
-                                        <option value="{{ $nom->id }}">{{ $nom->code }} -
-                                            {{ $nom->name }}</option>
+                                    <option value="{{ $nom->id }}">{{ $nom->code }} -
+                                        {{ $nom->name }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -208,7 +233,7 @@
                                 <select wire:model="nature_2"
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     @foreach ($natures as $nat)
-                                        <option value="{{ $nat }}">{{ $nat }}</option>
+                                    <option value="{{ $nat }}">{{ $nat }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -224,8 +249,9 @@
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     <option value="">Seleccionar Cuenta...</option>
                                     @foreach ($nomenclatures as $nom)
-                                        <option value="{{ $nom->id }}">{{ $nom->code }} -
-                                            {{ $nom->name }}</option>
+                                    <option value="{{ $nom->id }}">{{ $nom->code }} -
+                                        {{ $nom->name }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -233,7 +259,7 @@
                                 <select wire:model="nature_3"
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     @foreach ($natures as $nat)
-                                        <option value="{{ $nat }}">{{ $nat }}</option>
+                                    <option value="{{ $nat }}">{{ $nat }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -249,8 +275,9 @@
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     <option value="">Seleccionar Cuenta...</option>
                                     @foreach ($nomenclatures as $nom)
-                                        <option value="{{ $nom->id }}">{{ $nom->code }} -
-                                            {{ $nom->name }}</option>
+                                    <option value="{{ $nom->id }}">{{ $nom->code }} -
+                                        {{ $nom->name }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -258,7 +285,7 @@
                                 <select wire:model="nature_4"
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     @foreach ($natures as $nat)
-                                        <option value="{{ $nat }}">{{ $nat }}</option>
+                                    <option value="{{ $nat }}">{{ $nat }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -274,8 +301,9 @@
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     <option value="">Seleccionar Cuenta...</option>
                                     @foreach ($nomenclatures as $nom)
-                                        <option value="{{ $nom->id }}">{{ $nom->code }} -
-                                            {{ $nom->name }}</option>
+                                    <option value="{{ $nom->id }}">{{ $nom->code }} -
+                                        {{ $nom->name }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -283,7 +311,7 @@
                                 <select wire:model="nature_5"
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     @foreach ($natures as $nat)
-                                        <option value="{{ $nat }}">{{ $nat }}</option>
+                                    <option value="{{ $nat }}">{{ $nat }}</option>
                                     @endforeach
                                 </select>
                             </div>
@@ -299,8 +327,9 @@
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     <option value="">Seleccionar Cuenta...</option>
                                     @foreach ($nomenclatures as $nom)
-                                        <option value="{{ $nom->id }}">{{ $nom->code }} -
-                                            {{ $nom->name }}</option>
+                                    <option value="{{ $nom->id }}">{{ $nom->code }} -
+                                        {{ $nom->name }}
+                                    </option>
                                     @endforeach
                                 </select>
                             </div>
@@ -308,7 +337,7 @@
                                 <select wire:model="nature_6"
                                     class="w-full rounded-md border-zinc-300 dark:border-zinc-700 dark:bg-zinc-900 py-1.5 text-sm">
                                     @foreach ($natures as $nat)
-                                        <option value="{{ $nat }}">{{ $nat }}</option>
+                                    <option value="{{ $nat }}">{{ $nat }}</option>
                                     @endforeach
                                 </select>
                             </div>

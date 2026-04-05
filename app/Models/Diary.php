@@ -12,6 +12,8 @@ class Diary extends Model
         'debit',
         'credit',
         'invoice_number',
+        'nit_cc',
+        'business_name',
         'description',
         'parent_id',
     ];

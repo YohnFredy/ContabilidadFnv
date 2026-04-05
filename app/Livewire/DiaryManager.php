@@ -3,9 +3,10 @@
 namespace App\Livewire;
 
 use App\Models\AccountingRule;
+use App\Models\AccountingRuleCategory;
 use App\Models\Diary;
 use App\Models\Nomenclature;
-use Flux\Flux;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 use Livewire\Attributes\Computed;
 use Livewire\Component;
@@ -16,22 +17,40 @@ class DiaryManager extends Component
     use WithPagination;
 
     public $date;
+
     public $invoice_number;
+
+    public $nit_cc;
+
+    public $business_name;
+
     public $description;
-    public $selected_rule_id;
+
+    public $selected_category_id = ''; // Added this line
+
+    public $selected_rule_id = '';
 
     public $entries = [];
 
     public $editing_diary_id = null;
+
     public $showModal = false;
 
     public $viewingDiary = null;
+
     public $showViewModal = false;
 
     // Search Filters
     public $searchDateFrom;
+
     public $searchDateTo;
-    public $searchNomenclatureId;
+
+    public array $searchNomenclatureIds = [];
+
+    public array $searchNomenclatureExcludedIds = [];
+
+    public string $searchMovementType = '';
+
     public $searchInvoiceNumber;
 
     public function mount()
@@ -54,17 +73,21 @@ class DiaryManager extends Component
     {
         $this->searchDateFrom = null;
         $this->searchDateTo = null;
-        $this->searchNomenclatureId = null;
+        $this->searchNomenclatureIds = [];
+        $this->searchNomenclatureExcludedIds = [];
+        $this->searchMovementType = '';
         $this->searchInvoiceNumber = null;
         $this->resetPage();
     }
-
 
     public function resetForm()
     {
         $this->date = now()->format('Y-m-d');
         $this->invoice_number = '';
+        $this->nit_cc = '';
+        $this->business_name = '';
         $this->description = '';
+        $this->selected_category_id = '';
         $this->selected_rule_id = '';
         $this->editing_diary_id = null;
         $this->entries = [
@@ -77,14 +100,20 @@ class DiaryManager extends Component
         ];
     }
 
+    public function updatedSelectedCategoryId($value)
+    {
+        $this->selected_rule_id = '';
+        $this->updatedSelectedRuleId(null);
+    }
+
     public function updatedSelectedRuleId($value)
     {
-        if (!$value) {
+        if (! $value) {
             return;
         }
 
         $rule = AccountingRule::find($value);
-        if (!$rule) {
+        if (! $rule) {
             return;
         }
 
@@ -158,7 +187,7 @@ class DiaryManager extends Component
             ];
         }
 
-         // Account 6
+        // Account 6
         if ($rule->nomenclature_id_6) {
             $n6 = Nomenclature::find($rule->nomenclature_id_6);
             $this->entries[5] = [
@@ -191,7 +220,7 @@ class DiaryManager extends Component
         }
 
         /* lógica venta */
-        if ($this->entries[1]['type'] === 'Crédito' && str_starts_with($this->entries[2]['code'], '2')  && $this->entries[3]['code'] === '') {
+        if ($this->entries[1]['type'] === 'Crédito' && str_starts_with($this->entries[2]['code'], '2') && $this->entries[3]['code'] === '') {
             if ($index == 0 && $this->entries[0]['value'] > 0) {
                 $this->entries[1]['value'] = round($this->entries[0]['value'] / 1.19, 2);
                 $this->entries[2]['value'] = round($this->entries[1]['value'] * 0.19, 2);
@@ -205,6 +234,7 @@ class DiaryManager extends Component
                     $this->entries['2']['value'] = $this->entries[0]['value'] - $this->entries[1]['value'];
                 }
             }
+
             return;
         }
 
@@ -241,7 +271,7 @@ class DiaryManager extends Component
 
             if ($index == 1) {
 
-                if (!$this->entries[1]['value']) {
+                if (! $this->entries[1]['value']) {
                     $this->entries[1]['value'] = 0;
                 }
                 $this->entries['2']['value'] = $this->entries[0]['value'] + $this->entries[1]['value'];
@@ -264,11 +294,14 @@ class DiaryManager extends Component
 
         $parent = Diary::with('children', 'nomenclature')->find($id);
 
-        if (!$parent)
+        if (! $parent) {
             return;
+        }
 
         $this->date = $parent->date->format('Y-m-d');
         $this->invoice_number = $parent->invoice_number;
+        $this->nit_cc = $parent->nit_cc;
+        $this->business_name = $parent->business_name;
         $this->description = $parent->description;
 
         // Populate entries
@@ -300,9 +333,11 @@ class DiaryManager extends Component
     }
 
     public $showStartMonthConfirmation = false;
+
     public $pendingSave = false;
 
     public $showDateRestrictionError = false;
+
     public $restrictionDate = null; // To store the date to show in message
 
     public function checkDateAndSave()
@@ -314,13 +349,14 @@ class DiaryManager extends Component
         $maxDate = Diary::max('date');
 
         // If there are no records, just save
-        if (!$maxDate) {
+        if (! $maxDate) {
             $this->save();
+
             return;
         }
 
-        $inputDate = \Carbon\Carbon::parse($this->date);
-        $lastRecordedDate = \Carbon\Carbon::parse($maxDate);
+        $inputDate = Carbon::parse($this->date);
+        $lastRecordedDate = Carbon::parse($maxDate);
 
         // Check if input date is in a month prior to the last recorded date's month
         // We compare the first day of the months
@@ -336,6 +372,7 @@ class DiaryManager extends Component
                 $this->restrictionDate = $lastRecordedDate->format('F Y');
                 $this->showDateRestrictionError = true;
             }
+
             return;
         }
 
@@ -367,12 +404,13 @@ class DiaryManager extends Component
 
         // Filter empty entries (those without nomenclature_id or code, or with value <= 0)
         $valid_entries = array_filter($this->entries, function ($e) {
-            return !empty($e['code']) && !empty($e['nomenclature_id']) && floatval($e['value'] ?? 0) > 0;
+            return ! empty($e['code']) && ! empty($e['nomenclature_id']) && floatval($e['value'] ?? 0) > 0;
         });
 
         if (empty($valid_entries)) {
-             $this->dispatch('show-toast', message: 'Debe agregar al menos un registro.', variant: 'danger');
-             return;
+            $this->dispatch('show-toast', message: 'Debe agregar al menos un registro.', variant: 'danger');
+
+            return;
         }
 
         // Calculate totals
@@ -389,13 +427,14 @@ class DiaryManager extends Component
         }
 
         if (abs($total_debit - $total_credit) > 0.01) {
-             $this->dispatch('show-toast', message: 'La partida doble no cuadra. Débito: ' . number_format($total_debit, 2) . ' - Crédito: ' . number_format($total_credit, 2), variant: 'danger');
-             return;
+            $this->dispatch('show-toast', message: 'La partida doble no cuadra. Débito: '.number_format($total_debit, 2).' - Crédito: '.number_format($total_credit, 2), variant: 'danger');
+
+            return;
         }
 
-        DB::transaction(function () use ($valid_entries) {
-            // If editing, delete old children? Or update? 
-            // Simpler to delete children and recreate for the parent update logic, 
+        DB::transaction(function () {
+            // If editing, delete old children? Or update?
+            // Simpler to delete children and recreate for the parent update logic,
             // OR strictly update. User said "parent is the form of knowing who is related".
             // If we are editing, we update the parent, delete existing children, and create new ones.
 
@@ -406,7 +445,7 @@ class DiaryManager extends Component
                 // Delete children
                 $parent_entry->children()->delete();
             } else {
-                $parent_entry = new Diary();
+                $parent_entry = new Diary;
             }
 
             // First entry from the FORM is the parent, as requested.
@@ -417,12 +456,14 @@ class DiaryManager extends Component
 
             $row0 = $this->entries[0];
             if (empty($row0['code']) || floatval($row0['value'] ?? 0) <= 0) {
-                 $this->dispatch('show-toast', message: 'El primer registro (Padre) con valor es obligatorio.', variant: 'danger');
-                 throw new \Exception('Missing parent');
+                $this->dispatch('show-toast', message: 'El primer registro (Padre) con valor es obligatorio.', variant: 'danger');
+                throw new \Exception('Missing parent');
             }
 
             $parent_entry->date = $this->date;
             $parent_entry->invoice_number = $this->invoice_number;
+            $parent_entry->nit_cc = $this->nit_cc;
+            $parent_entry->business_name = $this->business_name;
             $parent_entry->description = $this->description;
             $parent_entry->nomenclature_id = $row0['nomenclature_id'];
 
@@ -438,15 +479,19 @@ class DiaryManager extends Component
 
             // Children
             foreach ($this->entries as $index => $row) {
-                if ($index === 0)
-                    continue; // Skip parent
-                if (empty($row['code']) || floatval($row['value'] ?? 0) <= 0)
-                    continue; // Skip empty or zero-value
+                if ($index === 0) {
+                    continue;
+                } // Skip parent
+                if (empty($row['code']) || floatval($row['value'] ?? 0) <= 0) {
+                    continue;
+                } // Skip empty or zero-value
 
-                $child = new Diary();
+                $child = new Diary;
                 $child->parent_id = $parent_entry->id;
                 $child->date = $this->date;
                 $child->invoice_number = $this->invoice_number;
+                $child->nit_cc = $this->nit_cc;
+                $child->business_name = $this->business_name;
                 $child->description = $this->description;
                 $child->nomenclature_id = $row['nomenclature_id'];
 
@@ -483,19 +528,55 @@ class DiaryManager extends Component
         }
 
         if ($this->searchInvoiceNumber) {
-            $query->where('invoice_number', 'like', '%' . $this->searchInvoiceNumber . '%');
+            $query->where('invoice_number', 'like', '%'.$this->searchInvoiceNumber.'%');
         }
 
-        if ($this->searchNomenclatureId) {
-            $id = $this->searchNomenclatureId;
-            $query->where(function ($q) use ($id) {
-                // Parent matches
-                $q->where('nomenclature_id', $id)
-                    // OR any child matches
-                    ->orWhereHas('children', function ($sq) use ($id) {
-                        $sq->where('nomenclature_id', $id);
-                    });
+        if (! empty($this->searchNomenclatureIds)) {
+            $ids = $this->searchNomenclatureIds;
+            $type = $this->searchMovementType;
+
+            $query->where(function ($q) use ($ids, $type) {
+                $q->where(function ($qParent) use ($ids, $type) {
+                    $qParent->whereIn('nomenclature_id', $ids);
+                    if ($type === 'debit') {
+                        $qParent->where('debit', '>', 0);
+                    } elseif ($type === 'credit') {
+                        $qParent->where('credit', '>', 0);
+                    }
+                })->orWhereHas('children', function ($sq) use ($ids, $type) {
+                    $sq->whereIn('nomenclature_id', $ids);
+                    if ($type === 'debit') {
+                        $sq->where('debit', '>', 0);
+                    } elseif ($type === 'credit') {
+                        $sq->where('credit', '>', 0);
+                    }
+                });
             });
+        } elseif (! empty($this->searchMovementType)) {
+            $type = $this->searchMovementType;
+            $query->where(function ($q) use ($type) {
+                $q->where(function ($qParent) use ($type) {
+                    if ($type === 'debit') {
+                        $qParent->where('debit', '>', 0);
+                    } elseif ($type === 'credit') {
+                        $qParent->where('credit', '>', 0);
+                    }
+                })->orWhereHas('children', function ($sq) use ($type) {
+                    if ($type === 'debit') {
+                        $sq->where('debit', '>', 0);
+                    } elseif ($type === 'credit') {
+                        $sq->where('credit', '>', 0);
+                    }
+                });
+            });
+        }
+
+        if (! empty($this->searchNomenclatureExcludedIds)) {
+            $excludedIds = $this->searchNomenclatureExcludedIds;
+            $query->whereNotIn('nomenclature_id', $excludedIds)
+                ->whereDoesntHave('children', function ($sq) use ($excludedIds) {
+                    $sq->whereIn('nomenclature_id', $excludedIds);
+                });
         }
 
         return $query->paginate(10);
@@ -512,19 +593,31 @@ class DiaryManager extends Component
     #[Computed]
     public function accountingRules()
     {
-        return AccountingRule::orderBy('name')->get();;
+        $query = AccountingRule::with('category')->orderBy('name');
+
+        if ($this->selected_category_id) {
+            $query->where('accounting_rule_category_id', $this->selected_category_id);
+        }
+
+        return $query->get();
+    }
+
+    #[Computed]
+    public function categories()
+    {
+        return AccountingRuleCategory::orderBy('name')->get();
     }
 
     #[Computed]
     public function totalDebit()
     {
-        return collect($this->entries)->where('type', 'Débito')->sum(fn($row) => floatval($row['value']));
+        return collect($this->entries)->where('type', 'Débito')->sum(fn ($row) => floatval($row['value']));
     }
 
     #[Computed]
     public function totalCredit()
     {
-        return collect($this->entries)->where('type', 'Crédito')->sum(fn($row) => floatval($row['value']));
+        return collect($this->entries)->where('type', 'Crédito')->sum(fn ($row) => floatval($row['value']));
     }
 
     public function render()

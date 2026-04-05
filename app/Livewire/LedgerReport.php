@@ -13,12 +13,15 @@ use Livewire\Component;
 class LedgerReport extends Component
 {
     public $start_date = '2025-06-01';
+
     public $end_date;
+
+    public array $nomenclatureIds = [];
 
     public function mount()
     {
         // Default to current month or year? Let's say empty for "All Time" or current month.
-        // User asked for "Desde fecha xxx hasta fecha xxx". 
+        // User asked for "Desde fecha xxx hasta fecha xxx".
         // Defaulting to "All Time" initially for the persistent table view, or current month for filtering.
         /*  $this->start_date = now()->startOfMonth()->format('Y-m-d'); */
         $this->end_date = now()->endOfMonth()->format('Y-m-d');
@@ -43,8 +46,9 @@ class LedgerReport extends Component
                 ->get();
 
             foreach ($sums as $sum) {
-                if ($sum->total_debit == 0 && $sum->total_credit == 0)
+                if ($sum->total_debit == 0 && $sum->total_credit == 0) {
                     continue;
+                }
 
                 Ledger::create([
                     'nomenclature_id' => $sum->nomenclature_id,
@@ -58,17 +62,25 @@ class LedgerReport extends Component
     }
 
     #[Computed]
+    public function nomenclatures()
+    {
+        return Nomenclature::query()
+            ->orderBy('code')
+            ->get(['id', 'code', 'name']);
+    }
+
+    #[Computed]
     public function ledgerEntries()
     {
         // If filtering by date, we calculate dynamically from Diary
         // If "All Time" (no dates? or specific flag?), we could use Ledger table.
         // User asked for "mostrar el libro mayor dependido de la fecha".
-        // The Ledger TABLE is updated by the button. 
+        // The Ledger TABLE is updated by the button.
         // The VIEW should probably reflect the filter.
 
         // Strategy:
-        // Always query Diary for the specific range to show in the table. 
-        // The "Ledger" table might be just for caching or "Official" closed periods, 
+        // Always query Diary for the specific range to show in the table.
+        // The "Ledger" table might be just for caching or "Official" closed periods,
         // OR the user wants the "Update" button to just refresh what is seen.
         // User: "que tega un botón para actualizar la suma ... por si de pronto hay alguna inconsistencia".
         // This implies the standard view might come from 'ledgers' table, but date filter overrides it?
@@ -87,6 +99,10 @@ class LedgerReport extends Component
             $query->whereDate('date', '<=', $this->end_date);
         }
 
+        if (! empty($this->nomenclatureIds)) {
+            $query->whereIn('nomenclature_id', $this->nomenclatureIds);
+        }
+
         $sums = $query->selectRaw('nomenclature_id, sum(debit) as total_debit, sum(credit) as total_credit')
             ->whereNotNull('nomenclature_id')
             ->groupBy('nomenclature_id')
@@ -95,7 +111,7 @@ class LedgerReport extends Component
 
         // Transform to behave like Ledger models with accessors
         return $sums->map(function ($item) {
-            // We need to hydrate a Ledger object or similar to use the accessors, 
+            // We need to hydrate a Ledger object or similar to use the accessors,
             // or just calculate here.
 
             $debit = floatval($item->total_debit);
@@ -116,6 +132,7 @@ class LedgerReport extends Component
     public function totals()
     {
         $entries = $this->ledgerEntries();
+
         return [
             'debit' => $entries->sum('debit'),
             'credit' => $entries->sum('credit'),
